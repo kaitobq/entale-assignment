@@ -27,23 +27,24 @@ type Media struct {
 }
 
 func SaveArticles(w http.ResponseWriter, r *http.Request) {
-	log.Println("Saving articles to database")
 	url := "https://gist.githubusercontent.com/gotokatsuya/cc78c04d3af15ebe43afe5ad970bc334/raw/dc39bacb834105c81497ba08940be5432ed69848/articles.json"
 	res, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	var articles []Article
-	err = json.Unmarshal(body, &articles)
-	if err != nil {
-		log.Fatalf("Error unmarshalling JSON: %v", err)
+	if err = json.Unmarshal(body, &articles); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	saveArticlesToDB(articles)
